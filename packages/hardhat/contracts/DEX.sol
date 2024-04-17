@@ -15,7 +15,16 @@ contract DEX {
 	/* ========== GLOBAL VARIABLES ========== */
 
 	IERC20 token; //instantiates the imported contract
+	uint256 public totalLiquidity;
+	mapping (address => uint256) public liquidity;  
 
+	/* ========== ERRORS ========== */
+
+	error AlreadyInitialized();
+	error NotEnoughTokens();
+	error TokenTransferFailed();
+	
+	
 	/* ========== EVENTS ========== */
 
 	/**
@@ -70,7 +79,36 @@ contract DEX {
 	 * @return totalLiquidity is the number of LPTs minting as a result of deposits made to DEX contract
 	 * NOTE: since ratio is 1:1, this is fine to initialize the totalLiquidity (wrt to balloons) as equal to eth balance of contract.
 	 */
-	function init(uint256 tokens) public payable returns (uint256) {}
+	function init(uint256 tokens) public payable returns (uint256) {
+		if (totalLiquidity != 0) {
+			revert AlreadyInitialized();
+		}
+
+		// Enforce 1:1 exchange
+		// if (tokens != address(this).balance) {
+		// 	revert NotEnoughTokens();
+		// }
+
+		totalLiquidity = address(this).balance;
+		liquidity[msg.sender] = totalLiquidity;
+
+		bool successfulTransfer = token.transferFrom(msg.sender, address(this), tokens);
+
+		if (!successfulTransfer) {
+			revert TokenTransferFailed();
+		}
+		
+
+		return totalLiquidity;
+		/*
+		require(totalLiquidity == 0, "DEX: init - already has liquidity");
+        totalLiquidity = address(this).balance;
+        liquidity[msg.sender] = totalLiquidity;
+        require(token.transferFrom(msg.sender, address(this), tokens), "DEX: init - transfer did not transact");
+        return totalLiquidity;
+		 */
+
+	}
 
 	/**
 	 * @notice returns yOutput, or yDelta for xInput (or xDelta)
