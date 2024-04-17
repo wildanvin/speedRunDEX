@@ -118,7 +118,17 @@ contract DEX {
 		uint256 xInput,
 		uint256 xReserves,
 		uint256 yReserves
-	) public pure returns (uint256 yOutput) {}
+	) public pure returns (uint256 yOutput) {
+		/*
+		dy = y * dx * 0.997 / 0.997 * dx + x
+		 */
+
+		uint256 numerator = (yReserves * xInput * 997) / 1000;
+		uint256 denominator =  ((997 * xInput)/ 1000 ) + xReserves;
+
+		return numerator/denominator;
+
+	}
 
 	/**
 	 * @notice returns liquidity for a user.
@@ -126,7 +136,9 @@ contract DEX {
 	 * NOTE: if you are using a mapping liquidity, then you can use `return liquidity[lp]` to get the liquidity for a user.
 	 * NOTE: if you will be submitting the challenge make sure to implement this function as it is used in the tests.
 	 */
-	function getLiquidity(address lp) public view returns (uint256) {}
+	function getLiquidity(address lp) public view returns (uint256) {
+		return liquidity[lp];
+	}
 
 	/**
 	 * @notice sends Ether to DEX in exchange for $BAL
